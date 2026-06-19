@@ -147,6 +147,34 @@ class SandboxService:
         sb.last_activity_at = utcnow()
         return await self._repo.save(sb)
 
+    async def resize(
+        self,
+        sandbox_id: str,
+        *,
+        cpu: int | None = None,
+        memory_mb: int | None = None,
+    ) -> Sandbox:
+        """Update CPU / memory limits on a running container (M4)."""
+        sb = await self.get(sandbox_id)
+        if not sb.container_id:
+            raise SandboxCreateFailed(f"sandbox {sandbox_id} has no container")
+
+        new_cpu = cpu if cpu is not None else sb.cpu
+        new_mem = memory_mb if memory_mb is not None else sb.memory_mb
+        await self._docker.update(sb.container_id, cpu=new_cpu, memory_mb=new_mem)
+
+        sb.cpu = new_cpu
+        sb.memory_mb = new_mem
+        return await self._repo.save(sb)
+
+    async def commit_to_snapshot(self, sandbox_id: str, name: str) -> dict:
+        """Run ``docker commit`` on the sandbox's container, producing a new image."""
+        sb = await self.get(sandbox_id)
+        if not sb.container_id:
+            raise SandboxCreateFailed(f"sandbox {sandbox_id} has no container")
+        image_id, image_ref = await self._docker.commit(sb.container_id, name)
+        return {"image_id": image_id, "image_ref": image_ref}
+
     # ── internals ──
 
     async def _mark_error_and_cleanup(self, sb: Sandbox) -> None:

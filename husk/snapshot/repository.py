@@ -19,8 +19,17 @@ class SnapshotRepository:
     async def get(self, snapshot_id: str) -> Snapshot | None:
         return await self._db.get(Snapshot, snapshot_id)
 
+    async def get_by_image_ref(self, image_ref: str) -> Snapshot | None:
+        result = await self._db.execute(select(Snapshot).where(Snapshot.image_ref == image_ref))
+        return result.scalar_one_or_none()
+
     async def insert(self, snapshot: Snapshot) -> Snapshot:
         self._db.add(snapshot)
+        await self._db.commit()
+        await self._db.refresh(snapshot)
+        return snapshot
+
+    async def save(self, snapshot: Snapshot) -> Snapshot:
         await self._db.commit()
         await self._db.refresh(snapshot)
         return snapshot

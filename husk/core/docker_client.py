@@ -157,6 +157,31 @@ class DockerClient:
                 pass
         await asyncio.to_thread(_remove)
 
+    async def update(self, container_id: str, *, cpu: int, memory_mb: int) -> None:
+        """Hot-resize a running container's CPU/memory limits."""
+        def _update() -> None:
+            self._client.containers.get(container_id).update(
+                cpu_quota=cpu * 100_000,
+                cpu_period=100_000,
+                mem_limit=f"{memory_mb}m",
+            )
+        await asyncio.to_thread(_update)
+
+    async def commit(self, container_id: str, repository: str) -> tuple[str, str]:
+        """Run ``docker commit`` to create a new image from the container.
+
+        Returns ``(image_id, image_ref)``.
+        """
+        def _commit() -> Any:
+            container = self._client.containers.get(container_id)
+            image = container.commit(repository=repository)
+            return image
+
+        image = await asyncio.to_thread(_commit)
+        # docker-py returns Image; .id is "sha256:...", first tag is the human-readable ref
+        tags = image.attrs.get("RepoTags") or [repository]
+        return (image.id, tags[0])
+
     # ── exec / put_archive: needed by daemon_inject ──
 
     async def put_archive(self, container_id: str, path: str, tar_data: bytes) -> None:

@@ -35,3 +35,11 @@ async def get_snapshot(
     service: SnapshotService = Depends(snapshot_service),
 ) -> SnapshotResponse:
     return SnapshotResponse.model_validate(await service.get(snapshot_id))
+
+
+@router.delete("/{snapshot_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_snapshot(
+    snapshot_id: str,
+    service: SnapshotService = Depends(snapshot_service),
+) -> None:
+    await service.delete(snapshot_id)

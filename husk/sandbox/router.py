@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, status
 from husk.auth.dependencies import current_apikey
 
 from .dependencies import sandbox_service
-from .schemas import CreateRequest, SandboxResponse
+from .schemas import CreateRequest, ResizeRequest, SandboxResponse
 from .service import SandboxService
 
 router = APIRouter(dependencies=[Depends(current_apikey)])
@@ -42,7 +42,7 @@ async def get_sandbox(
     return SandboxResponse.model_validate(await service.get(sandbox_id))
 
 
-@router.post("/{sandbox_id}/start", response_model=SandboxResponse, summary="Start a stopped sandbox")
+@router.post("/{sandbox_id}/start", response_model=SandboxResponse)
 async def start_sandbox(
     sandbox_id: str,
     service: SandboxService = Depends(sandbox_service),
@@ -50,12 +50,32 @@ async def start_sandbox(
     return SandboxResponse.model_validate(await service.start(sandbox_id))
 
 
-@router.post("/{sandbox_id}/stop", response_model=SandboxResponse, summary="Stop a running sandbox")
+@router.post("/{sandbox_id}/stop", response_model=SandboxResponse)
 async def stop_sandbox(
     sandbox_id: str,
     service: SandboxService = Depends(sandbox_service),
 ) -> SandboxResponse:
     return SandboxResponse.model_validate(await service.stop(sandbox_id))
+
+
+@router.post("/{sandbox_id}/resize", response_model=SandboxResponse)
+async def resize_sandbox(
+    sandbox_id: str,
+    body: ResizeRequest,
+    service: SandboxService = Depends(sandbox_service),
+) -> SandboxResponse:
+    return SandboxResponse.model_validate(
+        await service.resize(sandbox_id, cpu=body.cpu, memory_mb=body.memory_mb)
+    )
+
+
+@router.post("/{sandbox_id}/snapshot")
+async def commit_sandbox(
+    sandbox_id: str,
+    name: str,
+    service: SandboxService = Depends(sandbox_service),
+) -> dict:
+    return await service.commit_to_snapshot(sandbox_id, name)
 
 
 @router.post(
