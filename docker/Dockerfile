@@ -12,18 +12,17 @@ COPY frontend/ .
 # Output goes into the path the backend will mount as static.
 RUN pnpm build
 
-# ───── Stage 2: extract the upstream Daytona daemon binary ─────
-# Phase 1: Husk runs the upstream AGPL-3.0 daemon binary inside sandbox
-# containers. Husk source code is MIT; HTTP isolation keeps them separate.
-# See NOTICE for details.
-FROM alpine AS daemon
-RUN apk add --no-cache ca-certificates
-WORKDIR /out
-# In CI we cross-arch this; locally pull whatever the host has.
-ARG UPSTREAM_DAEMON_IMAGE=daytonaio/daemon:latest
-# (Real binary extraction is done by scripts/pull-upstream-daemon.sh in CI;
-# this stage is a placeholder so the layout is correct.)
-RUN echo "placeholder" > daemon-amd64 && echo "placeholder" > daemon-arm64
+# ───── Stage 2: build the Husk daemon (Go, MIT) ─────
+# Phase 2: Husk has its own MIT-licensed daemon. No more upstream AGPL
+# binary required at runtime — see NOTICE.
+FROM golang:1.22-alpine AS daemon
+WORKDIR /src
+ENV GOPROXY=https://goproxy.cn,https://goproxy.io,direct
+COPY daemon/go.mod daemon/go.sum* ./
+RUN go mod download || true
+COPY daemon/ .
+RUN GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o /out/daemon-amd64 ./cmd/daemon \
+ && GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o /out/daemon-arm64 ./cmd/daemon
 
 # ───── Stage 3: runtime ─────
 FROM python:3.12-slim AS runtime

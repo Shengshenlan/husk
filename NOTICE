@@ -3,20 +3,38 @@ Husk
 
 Husk is licensed under the MIT License (see LICENSE).
 
-Runtime dependencies
---------------------
+Runtime composition
+-------------------
 
-In Phase 1 (versions 0.x.y where x < 5), Husk embeds and runs the upstream
-Daytona daemon binary inside sandbox containers. The Daytona daemon is
-licensed under AGPL-3.0:
+Starting with Husk v0.5, the daemon that runs inside sandbox containers is
+the **MIT-licensed** husk-daemon (this repo's `daemon/` directory). No AGPL
+software ships in the runtime by default.
 
-  Source:  https://github.com/daytonaio/daytona/tree/main/apps/daemon
-  License: https://www.gnu.org/licenses/agpl-3.0.html
+Earlier ``v0.x`` (x < 5) builds optionally embedded the upstream Daytona
+daemon binary (AGPL-3.0). That fallback path remains supported for users
+who want broader compatibility with upstream Daytona's full toolbox
+surface (LSP, computer-use, recordings, etc.) — the husk-daemon currently
+implements files / process subset only.
 
-Husk's control plane communicates with the daemon only over HTTP and never
-links its source. Per the FSF's guidance on aggregation
-(https://www.gnu.org/licenses/gpl-faq.html#MereAggregation), this does not
-make Husk's source a derivative work of the daemon.
+When the upstream binary is used, Husk's control plane communicates with
+it only over HTTP and never links its source. Per the FSF's guidance on
+aggregation (https://www.gnu.org/licenses/gpl-faq.html#MereAggregation),
+this does not make Husk's source a derivative work of the daemon.
 
-Starting with Husk v0.5, the upstream daemon is replaced by an MIT-licensed
-implementation, removing all AGPL components from the runtime.
+Third-party components
+----------------------
+
+Frontend
+  React (MIT) · Vite (MIT) · TanStack Query (MIT) · openapi-fetch (MIT)
+  xterm.js (MIT)
+
+Backend
+  FastAPI (MIT) · uvicorn (BSD) · SQLAlchemy (MIT) · alembic (MIT)
+  pydantic (MIT) · docker-py (Apache 2.0) · httpx (BSD) · websockets (BSD)
+  argon2-cffi (MIT) · python-jose (MIT) · typer (MIT) · loguru (MIT)
+  rich (MIT) · attrs (MIT)
+
+Daemon (Go)
+  gin-gonic/gin (MIT)
+
+All third-party licenses are compatible with MIT redistribution.
