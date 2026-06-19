@@ -214,15 +214,32 @@ Phase 3   (远期)   v1.x       多机集群（90% 用户用不到）
 
 ## 8. 当前状态
 
-- ✅ 上游分析完成（[research/](./research/)）
-- ✅ 实施计划定稿（[PLAN.md](./PLAN.md)）
-- ✅ 架构设计完成（[ARCHITECTURE.md](./ARCHITECTURE.md)）
-- ⏭️ **下一步：M0 验证**（3 天，PLAN.md §12 的 docker 命令）
+**v0.5.0 完成 ✓** — 计划全部落地。
+
+| 阶段 | 状态 |
+|---|---|
+| Phase 1 (M1-M5) — 控制面 + CLI | ✅ 完成 |
+| Phase 1.5 — Web Dashboard (7 pages) | ✅ 完成 |
+| Phase 1.7 — Python + TypeScript SDK | ✅ 完成 |
+| Phase 2 — 自写 Go daemon (MIT 运行时) | ✅ 核心子集完成 (files + process) |
+| Phase 3 — 多机模式 | ⏸ 远期，按需 |
+
+跑起来：
+
+```bash
+docker build -f docker/Dockerfile -t husk:dev .
+docker run -d -p 8000:8000 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v husk-data:/data \
+  -e HUSK_ROOT_API_KEY=hk_your_root_key \
+  husk:dev
+# 浏览器：http://localhost:8000  (Dashboard)
+# OpenAPI: http://localhost:8000/docs
 
 ---
 
 ## 9. 许可
 
 仓库代码：MIT（见 LICENSE）
-Phase 1 运行时：含 1 个上游 AGPL daemon 容器/二进制（HTTP 边界不传染）
-Phase 2 起运行时：100% MIT
+v0.5+ 运行时：100% MIT（含自写 Go daemon）
+v0.1-v0.4：MIT 控制面 + 可选 AGPL daemon 二进制（HTTP 边界不传染，不必使用）

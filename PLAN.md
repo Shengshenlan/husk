@@ -3,20 +3,22 @@
 > **Husk** 是一个轻量级 AI 代码沙盒运行时。
 > 给 Agent / SDK 提供"创建容器、跑代码、操作文件、做 Git、控制桌面"等高层能力，单机一键起，MIT 许可。
 
+> **状态：v0.5.0 完成 ✓** — 本计划已落地。M0-M9、Phase 1.5、Phase 1.7、Phase 2
+> 核心子集全部交付。运行时 100% MIT。后续工作请见 CHANGELOG.md "Unreleased"。
+
 ---
 
 ## 0. 一页摘要
 
 - **代号**：Husk
 - **定位**：Daytona 之于 Gitea 的位置 —— 砍掉企业治理 / SaaS 多租户，保留沙盒生命周期 + Agent toolbox 这两块核心
-- **形态**：单 Python 服务 + 直连 Docker，1 个二进制（含嵌入的 daemon 二进制）
-- **许可**：仓库代码 100% MIT；Phase 1 运行时含 1 个上游 AGPL daemon 容器（HTTP 边界不传染），Phase 2 起运行时也 100% MIT
+- **形态**：单 Python 服务 + 直连 Docker，1 个 Go daemon 二进制嵌入容器
+- **许可**：仓库代码 100% MIT；从 v0.5 起运行时也 100% MIT（自写 Go daemon）
 - **依赖**：仅需要本机 Docker，无需 Postgres / Redis / Kafka / OIDC / S3
-- **资源**：~80MB 镜像，~100MB 内存
+- **资源**：278MB 镜像，~100MB 内存
 - **部署**：`docker run -v /var/run/docker.sock:/var/run/docker.sock husk/husk` 即可
-- **Phase 1 工期**：~5 周
-- **Phase 2 工期（可选）**：+6 周
 - **API 兼容**：上游 daytona Python / TS SDK 可无感切换
+- **当前状态**：v0.1 → v0.5 全部完成。SDK 自动生成跑通，前端 dashboard build 进单镜像，自写 daemon 在容器内可执行 Python/shell/files。
 
 ---
 
