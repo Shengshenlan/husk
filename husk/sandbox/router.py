@@ -42,7 +42,39 @@ async def get_sandbox(
     return SandboxResponse.model_validate(await service.get(sandbox_id))
 
 
-@router.delete("/{sandbox_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Destroy a sandbox")
+@router.post("/{sandbox_id}/start", response_model=SandboxResponse, summary="Start a stopped sandbox")
+async def start_sandbox(
+    sandbox_id: str,
+    service: SandboxService = Depends(sandbox_service),
+) -> SandboxResponse:
+    return SandboxResponse.model_validate(await service.start(sandbox_id))
+
+
+@router.post("/{sandbox_id}/stop", response_model=SandboxResponse, summary="Stop a running sandbox")
+async def stop_sandbox(
+    sandbox_id: str,
+    service: SandboxService = Depends(sandbox_service),
+) -> SandboxResponse:
+    return SandboxResponse.model_validate(await service.stop(sandbox_id))
+
+
+@router.post(
+    "/{sandbox_id}/last-activity",
+    response_model=SandboxResponse,
+    summary="Heartbeat — update last_activity_at to now (used by auto-stop)",
+)
+async def touch_sandbox(
+    sandbox_id: str,
+    service: SandboxService = Depends(sandbox_service),
+) -> SandboxResponse:
+    return SandboxResponse.model_validate(await service.touch(sandbox_id))
+
+
+@router.delete(
+    "/{sandbox_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Destroy a sandbox",
+)
 async def delete_sandbox(
     sandbox_id: str,
     service: SandboxService = Depends(sandbox_service),

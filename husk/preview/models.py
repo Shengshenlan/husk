@@ -8,6 +8,7 @@ from sqlalchemy import DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from husk.core.database import Base
+from husk.core.time import utcnow
 
 
 class PreviewToken(Base):
@@ -18,4 +19,4 @@ class PreviewToken(Base):
     port: Mapped[int] = mapped_column(Integer)
     token: Mapped[str] = mapped_column(String, unique=True)
     expires_at: Mapped[datetime] = mapped_column(DateTime)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
