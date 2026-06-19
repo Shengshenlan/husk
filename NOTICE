@@ -1,0 +1,22 @@
+Husk
+====
+
+Husk is licensed under the MIT License (see LICENSE).
+
+Runtime dependencies
+--------------------
+
+In Phase 1 (versions 0.x.y where x < 5), Husk embeds and runs the upstream
+Daytona daemon binary inside sandbox containers. The Daytona daemon is
+licensed under AGPL-3.0:
+
+  Source:  https://github.com/daytonaio/daytona/tree/main/apps/daemon
+  License: https://www.gnu.org/licenses/agpl-3.0.html
+
+Husk's control plane communicates with the daemon only over HTTP and never
+links its source. Per the FSF's guidance on aggregation
+(https://www.gnu.org/licenses/gpl-faq.html#MereAggregation), this does not
+make Husk's source a derivative work of the daemon.
+
+Starting with Husk v0.5, the upstream daemon is replaced by an MIT-licensed
+implementation, removing all AGPL components from the runtime.

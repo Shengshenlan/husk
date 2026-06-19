@@ -1,0 +1,57 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+*.egg
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ── Node / frontend ──
+node_modules/
+frontend/dist/
+.npm
+.pnpm-store/
+.eslintcache
+
+# ── Husk runtime ──
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# ── Embedded daemon binaries (CI 拉取) ──
+embedded/daemon-*
+
+# ── Frontend build 产物注入处（CI 构建） ──
+husk/static/dashboard/*
+!husk/static/dashboard/.gitkeep
+
+# ── 编辑器 ──
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# ── 环境变量本地覆盖 ──
+.env
+.env.local
+.env.*.local
+
+# ── uv ──
+.uv-cache/
+
+# ── 临时 ──
+*.log
+*.tmp
