@@ -1,0 +1,32 @@
+{
+  "name": "@husk/client",
+  "version": "0.0.1",
+  "description": "Auto-generated TypeScript client for the Husk control plane API",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "test": "vitest run",
+    "gen": "openapi-typescript http://localhost:8000/openapi.json -o src/_generated/schemas.ts"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.11.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0",
+    "openapi-typescript": "^7.4.0"
+  }
+}

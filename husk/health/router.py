@@ -1,10 +1,26 @@
-"""HTTP router for the health domain. Endpoints will be implemented in M1."""
+"""Health check endpoints — no auth required."""
+
+from __future__ import annotations
 
 from fastapi import APIRouter
+
+from husk import __version__
+from husk.core.deps import docker_client
 
 router = APIRouter()
 
 
-@router.get("/_placeholder")
-async def _placeholder() -> dict[str, str]:
-    return {"domain": "health", "status": "scaffolded"}
+@router.get("")
+async def health() -> dict:
+    return {"status": "ok", "version": __version__}
+
+
+@router.get("/ready")
+async def ready() -> dict:
+    """Readiness probe — checks Docker daemon reachability."""
+    try:
+        docker_client().ping()
+        docker_ok = True
+    except Exception:
+        docker_ok = False
+    return {"status": "ok" if docker_ok else "degraded", "docker": docker_ok}

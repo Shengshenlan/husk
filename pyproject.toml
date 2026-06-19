@@ -52,7 +52,9 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "N", "W"]
-ignore = ["E501"]
+# B008: FastAPI uses `= Depends(...)` as default argument — idiomatic
+# N818: HTTP-style exception names (NotFound/Conflict/Unauthorized) — idiomatic
+ignore = ["E501", "B008", "N818"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

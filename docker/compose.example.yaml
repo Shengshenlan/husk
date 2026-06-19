@@ -1,0 +1,19 @@
+name: husk
+
+services:
+  husk:
+    image: husk/husk:latest
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - husk-data:/data
+    environment:
+      HUSK_LOG_LEVEL: info
+    restart: unless-stopped
+
+volumes:
+  husk-data:

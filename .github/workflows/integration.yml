@@ -1,0 +1,21 @@
+name: integration
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with: { version: "latest" }
+      - run: uv python install 3.12
+      - run: uv sync
+      - name: Verify Docker socket
+        run: docker info
+      - name: Integration tests (testcontainers)
+        run: uv run pytest tests/integration/ -v
+        if: ${{ hashFiles('tests/integration/**/*.py') != '' }}

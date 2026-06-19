@@ -1,0 +1,19 @@
+name: husk-dev
+
+services:
+  husk:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ../husk:/app/husk:ro    # ← live-mount source for edit/refresh loops
+      - husk-dev-data:/data
+    environment:
+      HUSK_LOG_LEVEL: debug
+    restart: "no"
+
+volumes:
+  husk-dev-data:
