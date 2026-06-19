@@ -5,6 +5,8 @@ from __future__ import annotations
 import typer
 
 from husk import __version__
+from husk.cli import apikey as apikey_cli
+from husk.cli import sandbox as sandbox_cli
 
 app = typer.Typer(
     name="husk",
@@ -12,6 +14,9 @@ app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
 )
+
+app.add_typer(sandbox_cli.app, name="sandbox")
+app.add_typer(apikey_cli.app, name="apikey")
 
 
 @app.command()

@@ -7,10 +7,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from loguru import logger
 
 from husk import __version__
 from husk.auth.router import router as auth_router
-from husk.core.database import init_db
+from husk.auth.service import ApiKeyService
+from husk.core import database as _db
+from husk.core.config import settings
 from husk.core.exceptions import install_handlers
 from husk.core.logging import configure_logging
 from husk.health.router import router as health_router
@@ -18,6 +21,7 @@ from husk.preview.router import router as preview_router
 from husk.sandbox.router import router as sandbox_router
 from husk.snapshot.router import router as snapshot_router
 from husk.stub.router import router as stub_router
+from husk.tasks.scheduler import start_scheduler, stop_scheduler
 from husk.toolbox.router import router as toolbox_router
 from husk.volume.router import router as volume_router
 
@@ -25,8 +29,31 @@ from husk.volume.router import router as volume_router
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     configure_logging()
-    await init_db()
-    yield
+    await _db.init_db()
+    await _bootstrap_root_apikey()
+    scheduler = await start_scheduler()
+    try:
+        yield
+    finally:
+        await stop_scheduler(scheduler)
+
+
+async def _bootstrap_root_apikey() -> None:
+    """First start: ensure a root API key exists; print plaintext if newly generated."""
+    import os
+
+    # Read env at runtime (not via Settings cache) so test fixtures that set
+    # HUSK_ROOT_API_KEY post-import still see it.
+    configured = os.environ.get("HUSK_ROOT_API_KEY") or settings.root_api_key
+    assert _db.session_factory is not None
+    async with _db.session_factory() as db:
+        plaintext = await ApiKeyService(db).ensure_root_key(configured)
+    if plaintext and not configured:
+        logger.warning("=" * 60)
+        logger.warning("Husk auto-generated a root API key — save this NOW:")
+        logger.warning("    {}", plaintext)
+        logger.warning("It will not be shown again. Use HUSK_ROOT_API_KEY to pin one.")
+        logger.warning("=" * 60)
 
 
 app = FastAPI(
