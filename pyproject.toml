@@ -39,6 +39,7 @@ dev = [
     "testcontainers>=4.0",
     "ruff>=0.6",
     "mypy>=1.10",
+    "respx>=0.23.1",
 ]
 
 [[tool.uv.index]]
