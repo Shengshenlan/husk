@@ -28,6 +28,13 @@ from husk.volume import models as _volume_models  # noqa: F401, E402
 
 target_metadata = Base.metadata
 
+# Honour HUSK_DB_URL env var even if alembic.ini hardcodes a default.
+import os  # noqa: E402
+
+_env_url = os.environ.get("HUSK_DB_URL")
+if _env_url:
+    config.set_main_option("sqlalchemy.url", _env_url)
+
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
