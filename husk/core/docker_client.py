@@ -182,6 +182,21 @@ class DockerClient:
         tags = image.attrs.get("RepoTags") or [repository]
         return (image.id, tags[0])
 
+    # ── volumes ──
+
+    async def create_volume(self, name: str) -> None:
+        def _create() -> None:
+            self._client.volumes.create(name=name, labels={LABEL_OWNER: LABEL_OWNER_VALUE})
+        await asyncio.to_thread(_create)
+
+    async def remove_volume(self, name: str) -> None:
+        def _remove() -> None:
+            try:
+                self._client.volumes.get(name).remove(force=True)
+            except NotFound:
+                pass
+        await asyncio.to_thread(_remove)
+
     # ── exec / put_archive: needed by daemon_inject ──
 
     async def put_archive(self, container_id: str, path: str, tar_data: bytes) -> None:
