@@ -77,7 +77,7 @@ class DownloadResult:
 class _ProcessNamespace:
     """Wraps ``/api/toolbox/{sandbox_id}/process/*``."""
 
-    def __init__(self, sandbox: "Sandbox") -> None:
+    def __init__(self, sandbox: Sandbox) -> None:
         self._sandbox = sandbox
 
     def execute(
@@ -123,7 +123,7 @@ class _ProcessNamespace:
 class _FilesystemNamespace:
     """Wraps ``/api/toolbox/{sandbox_id}/files/*``."""
 
-    def __init__(self, sandbox: "Sandbox") -> None:
+    def __init__(self, sandbox: Sandbox) -> None:
         self._sandbox = sandbox
 
     def list(self, path: str = "/workspace") -> list[FileInfo]:
