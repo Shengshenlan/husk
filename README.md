@@ -150,12 +150,12 @@ Phase 3   (远期)   v1.x       多机集群（90% 用户用不到）
 
 | 文档 | 作用 | 何时看 |
 |---|---|---|
-| **[PLAN.md](./PLAN.md)** | 实施计划：阶段、里程碑、任务清单、决策点 | 知道"做什么、什么时候做" |
-| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | 架构详解：分层、请求生命周期、网络、存储 | 知道"长什么样、怎么跑起来" |
-| **[CODE_STRUCTURE.md](./CODE_STRUCTURE.md)** | 项目代码结构：每个文件的职责、依赖、内容速览 | 知道"代码怎么放、scaffold 怎么写" |
-| [research/upstream-features.md](./research/upstream-features.md) | 上游 Daytona 功能/模块逐一拆解 | 想理解为什么砍这个保那个 |
-| [research/upstream-apis.md](./research/upstream-apis.md) | 上游 220+ HTTP 接口完整清单 | 想确认某个 endpoint 我们做不做 |
-| [archive/](./archive/) | 早期中间稿（带 runner / 不带 runner 两版） | 一般不看；想回顾决策演进时翻 |
+| **[PLAN.md](./docs/project/PLAN.md)** | 实施计划：阶段、里程碑、任务清单、决策点 | 知道"做什么、什么时候做" |
+| **[ARCHITECTURE.md](./docs/project/ARCHITECTURE.md)** | 架构详解：分层、请求生命周期、网络、存储 | 知道"长什么样、怎么跑起来" |
+| **[CODE_STRUCTURE.md](./docs/project/CODE_STRUCTURE.md)** | 项目代码结构：每个文件的职责、依赖、内容速览 | 知道"代码怎么放、scaffold 怎么写" |
+| [research/upstream-features.md](./docs/project/research/upstream-features.md) | 上游 Daytona 功能/模块逐一拆解 | 想理解为什么砍这个保那个 |
+| [research/upstream-apis.md](./docs/project/research/upstream-apis.md) | 上游 220+ HTTP 接口完整清单 | 想确认某个 endpoint 我们做不做 |
+| [archive/](./docs/project/archive/) | 早期中间稿（带 runner / 不带 runner 两版） | 一般不看；想回顾决策演进时翻 |
 
 ---
 
@@ -174,7 +174,7 @@ Phase 3   (远期)   v1.x       多机集群（90% 用户用不到）
 | 数据库 | **SQLite 默认 / Postgres 可选** | 单文件备份、零外部依赖 |
 | 仓库许可 | **MIT** | 商用友好 |
 
-锁定决策详见 [PLAN.md §13](./PLAN.md)。
+锁定决策详见 [PLAN.md §13](./docs/project/PLAN.md)。
 
 ---
 
@@ -231,9 +231,10 @@ docker build -f docker/Dockerfile -t husk:dev .
 docker run -d -p 8000:8000 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v husk-data:/data \
-  -e HUSK_ROOT_API_KEY=hk_your_root_key \
+  -e HUSK_ADMIN_USERNAME=admin \
+  -e HUSK_ADMIN_PASSWORD=你的密码 \
   husk:dev
-# 浏览器：http://localhost:8000  (Dashboard)
+# 浏览器：http://localhost:8000  (Dashboard，用上面设置的用户名密码登录)
 # OpenAPI: http://localhost:8000/docs
 
 ---
