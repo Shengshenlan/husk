@@ -36,7 +36,9 @@ class Settings(BaseSettings):
     reaper_interval: int = 60  # seconds
 
     # ── Auth ──
-    root_api_key: str | None = None  # 启动时若未设则自动生成
+    admin_username: str = "admin"
+    admin_password: str | None = None
+    root_api_key: str | None = None
     preview_jwt_secret: str = Field(default_factory=lambda: secrets.token_urlsafe(32))
 
 

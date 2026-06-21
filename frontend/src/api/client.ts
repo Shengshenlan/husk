@@ -115,6 +115,25 @@ export const apiKeys = {
   revoke: (name: string) => request<void>('DELETE', `/api/api-keys/${name}`),
 }
 
+export interface LoginRequest {
+  username: string
+  password: string
+}
+
+export interface LoginResponse {
+  access_token: string
+  token_type: string
+}
+
+export interface UserResponse {
+  username: string
+}
+
+export const auth = {
+  login: (body: LoginRequest) => request<LoginResponse>('POST', '/api/auth/login', body),
+  me: () => request<UserResponse>('GET', '/api/auth/me'),
+}
+
 // ── Health ──
 
 export interface Health {

@@ -11,6 +11,7 @@ from loguru import logger
 
 from husk import __version__
 from husk.auth.router import router as auth_router
+from husk.auth.router import session_router as auth_session_router
 from husk.auth.service import ApiKeyService
 from husk.core import database as _db
 from husk.core.config import settings
@@ -30,7 +31,8 @@ from husk.volume.router import router as volume_router
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     configure_logging()
     await _db.init_db()
-    await _bootstrap_root_apikey()
+    _check_admin_password()
+    await _bootstrap_default_apikey()
     scheduler = await start_scheduler()
     try:
         yield
@@ -38,22 +40,31 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         await stop_scheduler(scheduler)
 
 
-async def _bootstrap_root_apikey() -> None:
-    """First start: ensure a root API key exists; print plaintext if newly generated."""
+def _check_admin_password() -> None:
+    if not settings.admin_password:
+        logger.error("HUSK_ADMIN_PASSWORD is not set. Dashboard login will be disabled.")
+        logger.error("Set it via environment variable: HUSK_ADMIN_PASSWORD=your_password")
+
+
+async def _bootstrap_default_apikey() -> None:
     import os
 
-    # Read env at runtime (not via Settings cache) so test fixtures that set
-    # HUSK_ROOT_API_KEY post-import still see it.
     configured = os.environ.get("HUSK_ROOT_API_KEY") or settings.root_api_key
     assert _db.session_factory is not None
     async with _db.session_factory() as db:
-        plaintext = await ApiKeyService(db).ensure_root_key(configured)
-    if plaintext and not configured:
-        logger.warning("=" * 60)
-        logger.warning("Husk auto-generated a root API key — save this NOW:")
-        logger.warning("    {}", plaintext)
-        logger.warning("It will not be shown again. Use HUSK_ROOT_API_KEY to pin one.")
-        logger.warning("=" * 60)
+        if configured:
+            existing = await ApiKeyService(db).get_by_name("default")
+            if existing is None:
+                await ApiKeyService(db).ensure_root_key(configured)
+            return
+        existing = await ApiKeyService(db).list()
+        if not existing:
+            row, plaintext = await ApiKeyService(db).create("default")
+            logger.warning("=" * 60)
+            logger.warning("Husk auto-generated a default API key:")
+            logger.warning("    {}", plaintext)
+            logger.warning("Save it for external SDK / CLI use. It will not be shown again.")
+            logger.warning("=" * 60)
 
 
 app = FastAPI(
@@ -66,6 +77,7 @@ app = FastAPI(
 install_handlers(app)
 
 app.include_router(auth_router, prefix="/api/api-keys", tags=["auth"])
+app.include_router(auth_session_router, prefix="/api/auth", tags=["auth"])
 app.include_router(sandbox_router, prefix="/api/sandbox", tags=["sandbox"])
 app.include_router(snapshot_router, prefix="/api/snapshots", tags=["snapshot"])
 app.include_router(volume_router, prefix="/api/volumes", tags=["volume"])

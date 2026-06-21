@@ -14,3 +14,7 @@ class ApiKeyNotFound(NotFound):
 class DuplicateApiKeyName(HuskError):
     status_code = 409
     code = "duplicate_api_key_name"
+
+
+class InvalidCredentials(Unauthorized):
+    code = "invalid_credentials"

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useI18n } from './lib/i18n'
 import * as api from './api/client'
 
 export function App() {
@@ -10,53 +11,83 @@ export function App() {
   return <Layout onLogout={() => { api.clearToken(); setToken('') }} />
 }
 
-// ── Login ──
-
 function Login({ onLogin }: { onLogin: (t: string) => void }) {
-  const [val, setVal] = useState('')
+  const { t } = useI18n()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [err, setErr] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function submit() {
+    if (!username || !password) {
+      setErr(t.login.required)
+      return
+    }
+    setLoading(true)
+    setErr('')
+    try {
+      const res = await api.auth.login({ username, password })
+      onLogin(res.access_token)
+    } catch (e: any) {
+      setErr(e.message || t.login.error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
       <div className="card" style={{ minWidth: 400 }}>
-        <h1>Husk</h1>
-        <p className="muted">Paste your API key to sign in.</p>
-        <input
-          type="password"
-          placeholder="hk_..."
-          value={val}
-          onChange={(e) => setVal(e.target.value)}
-          style={{ width: '100%', marginBottom: 12 }}
-          onKeyDown={(e) => { if (e.key === 'Enter') submit() }}
-        />
+        <h1>{t.appName}</h1>
+        <p className="muted">{t.login.title}</p>
+        <div style={{ display: 'grid', gap: 10, marginBottom: 12 }}>
+          <label>
+            {t.login.username}
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              style={{ width: '100%' }}
+              onKeyDown={(e) => { if (e.key === 'Enter') submit() }}
+            />
+          </label>
+          <label>
+            {t.login.password}
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{ width: '100%' }}
+              onKeyDown={(e) => { if (e.key === 'Enter') submit() }}
+            />
+          </label>
+        </div>
         {err && <div className="error">{err}</div>}
-        <button className="primary" onClick={submit} style={{ width: '100%' }}>
-          Sign in
+        <button className="primary" onClick={submit} style={{ width: '100%' }} disabled={loading}>
+          {loading ? '...' : t.login.submit}
         </button>
-        <p className="muted" style={{ marginTop: 16, fontSize: 12 }}>
-          New install? Run <code>husk apikey create root</code> on your server.
-        </p>
       </div>
     </div>
   )
-  function submit() {
-    if (!val.startsWith('hk_')) { setErr('API keys start with hk_'); return }
-    onLogin(val.trim())
-  }
 }
 
-// ── Layout ──
-
 function Layout({ onLogout }: { onLogout: () => void }) {
+  const { t, locale, setLocale } = useI18n()
   const [page, setPage] = useState<'sandboxes' | 'snapshots' | 'keys' | 'settings'>('sandboxes')
   return (
     <div className="layout">
       <div className="sidebar">
-        <h1>Husk</h1>
-        <a className={page === 'sandboxes' ? 'active' : ''} onClick={() => setPage('sandboxes')}>Sandboxes</a>
-        <a className={page === 'snapshots' ? 'active' : ''} onClick={() => setPage('snapshots')}>Snapshots</a>
-        <a className={page === 'keys' ? 'active' : ''} onClick={() => setPage('keys')}>API Keys</a>
-        <a className={page === 'settings' ? 'active' : ''} onClick={() => setPage('settings')}>Settings</a>
-        <a onClick={onLogout} style={{ marginTop: 40, color: 'var(--muted)' }}>Sign out</a>
+        <h1>{t.appName}</h1>
+        <a className={page === 'sandboxes' ? 'active' : ''} onClick={() => setPage('sandboxes')}>{t.nav.sandboxes}</a>
+        <a className={page === 'snapshots' ? 'active' : ''} onClick={() => setPage('snapshots')}>{t.nav.snapshots}</a>
+        <a className={page === 'keys' ? 'active' : ''} onClick={() => setPage('keys')}>{t.nav.keys}</a>
+        <a className={page === 'settings' ? 'active' : ''} onClick={() => setPage('settings')}>{t.nav.settings}</a>
+        <a onClick={onLogout} style={{ marginTop: 40, color: 'var(--muted)' }}>{t.nav.logout}</a>
+        <div style={{ marginTop: 20, padding: '0 20px' }}>
+          <select value={locale} onChange={(e) => setLocale(e.target.value as any)} style={{ width: '100%' }}>
+            <option value="zh-CN">中文</option>
+            <option value="en-US">English</option>
+          </select>
+        </div>
       </div>
       <div className="main">
         {page === 'sandboxes' && <SandboxesPage />}
@@ -68,9 +99,8 @@ function Layout({ onLogout }: { onLogout: () => void }) {
   )
 }
 
-// ── Sandboxes ──
-
 function SandboxesPage() {
+  const { t } = useI18n()
   const qc = useQueryClient()
   const list = useQuery({
     queryKey: ['sandboxes'],
@@ -99,30 +129,31 @@ function SandboxesPage() {
 
   if (selected) {
     const sb = list.data?.find((s) => s.id === selected)
-    return <SandboxDetail sb={sb!} onBack={() => setSelected(null)} />
+    if (!sb) return null
+    return <SandboxDetail sb={sb} onBack={() => setSelected(null)} />
   }
 
   return (
     <>
       <div className="row" style={{ marginBottom: 20 }}>
-        <h2>Sandboxes</h2>
+        <h2>{t.sandboxes.title}</h2>
         <div className="spacer" />
-        <button className="primary" onClick={() => setCreating(true)}>+ New Sandbox</button>
+        <button className="primary" onClick={() => setCreating(true)}>+ {t.sandboxes.new}</button>
       </div>
 
-      {list.isLoading && <p>Loading…</p>}
+      {list.isLoading && <p>{t.sandboxes.loading}</p>}
       {list.error && <div className="error">{(list.error as Error).message}</div>}
       {list.data?.length === 0 && (
-        <div className="empty">No sandboxes yet. Click "New Sandbox" to create one.</div>
+        <div className="empty">{t.sandboxes.empty}</div>
       )}
       {list.data && list.data.length > 0 && (
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Image</th>
-              <th>State</th>
-              <th>Resources</th>
+              <th>{t.sandboxes.name}</th>
+              <th>{t.sandboxes.image}</th>
+              <th>{t.sandboxes.state}</th>
+              <th>{t.sandboxes.resources}</th>
               <th></th>
             </tr>
           </thead>
@@ -138,14 +169,14 @@ function SandboxesPage() {
                 <td className="muted">{sb.cpu}c / {sb.memory_mb}m</td>
                 <td>
                   {sb.state === 'started' && (
-                    <button onClick={() => stop.mutate(sb.id)}>Stop</button>
+                    <button onClick={() => stop.mutate(sb.id)}>{t.sandboxes.stop}</button>
                   )}
                   {sb.state === 'stopped' && (
-                    <button onClick={() => start.mutate(sb.id)}>Start</button>
+                    <button onClick={() => start.mutate(sb.id)}>{t.sandboxes.start}</button>
                   )}
                   <button className="danger" style={{ marginLeft: 8 }}
-                          onClick={() => { if (confirm(`Destroy ${sb.name}?`)) destroy.mutate(sb.id) }}>
-                    Destroy
+                          onClick={() => { if (confirm(t.common.confirmDestroy(sb.name))) destroy.mutate(sb.id) }}>
+                    {t.sandboxes.destroy}
                   </button>
                 </td>
               </tr>
@@ -160,25 +191,26 @@ function SandboxesPage() {
 }
 
 function CreateDialog({ onClose, onCreate }: { onClose: () => void; onCreate: (b: api.CreateSandboxRequest) => void }) {
+  const { t } = useI18n()
   const [name, setName] = useState('')
   const [image, setImage] = useState('alpine:3.20')
   const [cpu, setCpu] = useState(1)
   const [mem, setMem] = useState(512)
   return (
     <dialog open>
-      <h3>Create Sandbox</h3>
+      <h3>{t.sandboxes.createTitle}</h3>
       <div style={{ display: 'grid', gap: 10, marginBottom: 16 }}>
-        <label>Name <input value={name} onChange={(e) => setName(e.target.value)} placeholder="auto-generated" style={{ width: '100%' }} /></label>
-        <label>Image <input value={image} onChange={(e) => setImage(e.target.value)} style={{ width: '100%' }} /></label>
-        <label>CPU <input type="number" min={1} max={64} value={cpu} onChange={(e) => setCpu(+e.target.value)} /></label>
-        <label>Memory MB <input type="number" min={128} value={mem} onChange={(e) => setMem(+e.target.value)} /></label>
+        <label>{t.sandboxes.nameLabel} <input value={name} onChange={(e) => setName(e.target.value)} placeholder="auto-generated" style={{ width: '100%' }} /></label>
+        <label>{t.sandboxes.imageLabel} <input value={image} onChange={(e) => setImage(e.target.value)} style={{ width: '100%' }} /></label>
+        <label>{t.sandboxes.cpuLabel} <input type="number" min={1} max={64} value={cpu} onChange={(e) => setCpu(+e.target.value)} /></label>
+        <label>{t.sandboxes.memoryLabel} <input type="number" min={128} value={mem} onChange={(e) => setMem(+e.target.value)} /></label>
       </div>
       <div className="row">
         <div className="spacer" />
-        <button onClick={onClose}>Cancel</button>
+        <button onClick={onClose}>{t.sandboxes.cancel}</button>
         <button className="primary" style={{ marginLeft: 8 }}
                 onClick={() => onCreate({ name: name || undefined, snapshot_id: image, cpu, memory_mb: mem })}>
-          Create
+          {t.sandboxes.create}
         </button>
       </div>
     </dialog>
@@ -186,42 +218,38 @@ function CreateDialog({ onClose, onCreate }: { onClose: () => void; onCreate: (b
 }
 
 function SandboxDetail({ sb, onBack }: { sb: api.Sandbox; onBack: () => void }) {
+  const { t } = useI18n()
   return (
     <>
-      <a onClick={onBack}>← Back to sandboxes</a>
+      <a onClick={onBack}>← {t.sandboxes.back}</a>
       <h2 style={{ marginTop: 12 }}>{sb.name}</h2>
 
       <div className="card">
-        <h3>Overview</h3>
+        <h3>{t.sandboxes.overview}</h3>
         <dl className="kv">
-          <dt>ID</dt><dd>{sb.id}</dd>
-          <dt>State</dt><dd><span className={`badge ${sb.state}`}>{sb.state}</span></dd>
-          <dt>Image</dt><dd>{sb.snapshot_id ?? '—'}</dd>
-          <dt>CPU / Memory</dt><dd>{sb.cpu} cores / {sb.memory_mb} MB</dd>
-          <dt>Disk</dt><dd>{sb.disk_gb} GB</dd>
-          <dt>Auto-stop</dt><dd>{sb.auto_stop_interval ? `${sb.auto_stop_interval}s` : '—'}</dd>
-          <dt>Last activity</dt><dd>{sb.last_activity_at ?? '—'}</dd>
-          <dt>Created</dt><dd>{sb.created_at}</dd>
+          <dt>{t.sandboxes.id}</dt><dd>{sb.id}</dd>
+          <dt>{t.sandboxes.state}</dt><dd><span className={`badge ${sb.state}`}>{sb.state}</span></dd>
+          <dt>{t.sandboxes.image}</dt><dd>{sb.snapshot_id ?? '—'}</dd>
+          <dt>CPU / {t.sandboxes.memoryLabel}</dt><dd>{sb.cpu} cores / {sb.memory_mb} MB</dd>
+          <dt>{t.sandboxes.disk}</dt><dd>{sb.disk_gb} GB</dd>
+          <dt>{t.sandboxes.autoStop}</dt><dd>{sb.auto_stop_interval ? `${sb.auto_stop_interval}s` : '—'}</dd>
+          <dt>{t.sandboxes.lastActivity}</dt><dd>{sb.last_activity_at ?? '—'}</dd>
+          <dt>{t.sandboxes.created}</dt><dd>{sb.created_at}</dd>
         </dl>
       </div>
 
       <div className="card">
-        <h3>Toolbox</h3>
+        <h3>{t.sandboxes.toolbox}</h3>
         <p className="muted">
-          Toolbox API is reverse-proxied at <code>/api/toolbox/{sb.id}/*</code>.
-          Try: <code>GET /api/toolbox/{sb.id}/files?path=/</code>
-        </p>
-        <p className="muted">
-          (xterm.js terminal lands when daemon binary is embedded — set HUSK_DAEMON_BIN.)
+          {t.sandboxes.toolboxHint} <code>/api/toolbox/{sb.id}/*</code>.
         </p>
       </div>
     </>
   )
 }
 
-// ── Snapshots ──
-
 function SnapshotsPage() {
+  const { t } = useI18n()
   const qc = useQueryClient()
   const list = useQuery({ queryKey: ['snapshots'], queryFn: api.snapshots.list })
   const [pulling, setPulling] = useState(false)
@@ -240,15 +268,15 @@ function SnapshotsPage() {
   return (
     <>
       <div className="row" style={{ marginBottom: 20 }}>
-        <h2>Snapshots</h2>
+        <h2>{t.snapshots.title}</h2>
         <div className="spacer" />
-        <button className="primary" onClick={() => setPulling(true)}>+ Pull image</button>
+        <button className="primary" onClick={() => setPulling(true)}>+ {t.snapshots.pull}</button>
       </div>
 
-      {list.data?.length === 0 && <div className="empty">No snapshots yet.</div>}
+      {list.data?.length === 0 && <div className="empty">{t.snapshots.empty}</div>}
       {list.data && list.data.length > 0 && (
         <table>
-          <thead><tr><th>Name</th><th>Image</th><th>State</th><th>Created</th><th></th></tr></thead>
+          <thead><tr><th>{t.snapshots.name}</th><th>{t.snapshots.imageRef}</th><th>{t.sandboxes.state}</th><th>{t.snapshots.created}</th><th></th></tr></thead>
           <tbody>
             {list.data.map((s) => (
               <tr key={s.id}>
@@ -257,8 +285,8 @@ function SnapshotsPage() {
                 <td><span className={`badge ${s.state}`}>{s.state}</span></td>
                 <td className="muted">{s.created_at}</td>
                 <td>
-                  <button className="danger" onClick={() => { if (confirm(`Delete ${s.name}?`)) destroy.mutate(s.id) }}>
-                    Delete
+                  <button className="danger" onClick={() => { if (confirm(t.common.confirmDelete(s.name))) destroy.mutate(s.id) }}>
+                    {t.snapshots.delete}
                   </button>
                 </td>
               </tr>
@@ -269,18 +297,18 @@ function SnapshotsPage() {
 
       {pulling && (
         <dialog open>
-          <h3>Pull image as snapshot</h3>
+          <h3>{t.snapshots.pullTitle}</h3>
           <div style={{ display: 'grid', gap: 10 }}>
-            <label>Name <input value={name} onChange={(e) => setName(e.target.value)} /></label>
-            <label>Image ref <input value={ref} onChange={(e) => setRef(e.target.value)} /></label>
+            <label>{t.snapshots.imageName} <input value={name} onChange={(e) => setName(e.target.value)} /></label>
+            <label>{t.snapshots.imageRefLabel} <input value={ref} onChange={(e) => setRef(e.target.value)} /></label>
           </div>
           <div className="row" style={{ marginTop: 16 }}>
             <div className="spacer" />
-            <button onClick={() => setPulling(false)}>Cancel</button>
+            <button onClick={() => setPulling(false)}>{t.sandboxes.cancel}</button>
             <button className="primary" style={{ marginLeft: 8 }}
                     disabled={!name || create.isPending}
                     onClick={() => create.mutate()}>
-              {create.isPending ? 'Pulling…' : 'Pull'}
+              {create.isPending ? t.snapshots.pulling : t.snapshots.pull}
             </button>
           </div>
           {create.error && <div className="error" style={{ marginTop: 12 }}>{(create.error as Error).message}</div>}
@@ -290,9 +318,8 @@ function SnapshotsPage() {
   )
 }
 
-// ── API Keys ──
-
 function KeysPage() {
+  const { t } = useI18n()
   const qc = useQueryClient()
   const list = useQuery({ queryKey: ['keys'], queryFn: api.apiKeys.list })
   const [creating, setCreating] = useState(false)
@@ -311,15 +338,15 @@ function KeysPage() {
   return (
     <>
       <div className="row" style={{ marginBottom: 20 }}>
-        <h2>API Keys</h2>
+        <h2>{t.apiKeys.title}</h2>
         <div className="spacer" />
-        <button className="primary" onClick={() => setCreating(true)}>+ New key</button>
+        <button className="primary" onClick={() => setCreating(true)}>+ {t.apiKeys.new}</button>
       </div>
 
-      {list.data?.length === 0 && <div className="empty">No keys.</div>}
+      {list.data?.length === 0 && <div className="empty">{t.apiKeys.empty}</div>}
       {list.data && list.data.length > 0 && (
         <table>
-          <thead><tr><th>Name</th><th>Prefix</th><th>Created</th><th>Last used</th><th></th></tr></thead>
+          <thead><tr><th>{t.apiKeys.name}</th><th>{t.apiKeys.prefix}</th><th>{t.apiKeys.created}</th><th>{t.apiKeys.lastUsed}</th><th></th></tr></thead>
           <tbody>
             {list.data.map((k) => (
               <tr key={k.id}>
@@ -328,8 +355,8 @@ function KeysPage() {
                 <td className="muted">{k.created_at}</td>
                 <td className="muted">{k.last_used_at ?? '—'}</td>
                 <td>
-                  <button className="danger" onClick={() => { if (confirm(`Revoke ${k.name}?`)) revoke.mutate(k.name) }}>
-                    Revoke
+                  <button className="danger" onClick={() => { if (confirm(t.common.confirmRevoke(k.name))) revoke.mutate(k.name) }}>
+                    {t.apiKeys.revoke}
                   </button>
                 </td>
               </tr>
@@ -340,13 +367,13 @@ function KeysPage() {
 
       {creating && (
         <dialog open>
-          <h3>Create API key</h3>
-          <label>Name <input value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%' }} /></label>
+          <h3>{t.apiKeys.createTitle}</h3>
+          <label>{t.apiKeys.name} <input value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%' }} /></label>
           <div className="row" style={{ marginTop: 16 }}>
             <div className="spacer" />
-            <button onClick={() => setCreating(false)}>Cancel</button>
+            <button onClick={() => setCreating(false)}>{t.sandboxes.cancel}</button>
             <button className="primary" style={{ marginLeft: 8 }} disabled={!name} onClick={() => create.mutate()}>
-              Create
+              {t.sandboxes.create}
             </button>
           </div>
         </dialog>
@@ -354,14 +381,14 @@ function KeysPage() {
 
       {shown && (
         <dialog open>
-          <h3>API key created — save it now</h3>
-          <p>This is the only time you'll see the plaintext key.</p>
+          <h3>{t.apiKeys.saveNow}</h3>
+          <p>{t.apiKeys.saveHint}</p>
           <code style={{ display: 'block', padding: 12, background: 'var(--hover)', wordBreak: 'break-all' }}>
             {shown.key}
           </code>
           <div className="row" style={{ marginTop: 16 }}>
             <div className="spacer" />
-            <button className="primary" onClick={() => setShown(null)}>I've saved it</button>
+            <button className="primary" onClick={() => setShown(null)}>{t.apiKeys.saved}</button>
           </div>
         </dialog>
       )}
@@ -369,34 +396,32 @@ function KeysPage() {
   )
 }
 
-// ── Settings ──
-
 function SettingsPage() {
+  const { t } = useI18n()
   const h = useQuery({ queryKey: ['health'], queryFn: api.health.get })
   return (
     <>
-      <h2>Settings</h2>
+      <h2>{t.settings.title}</h2>
       <div className="card">
-        <h3>Server</h3>
+        <h3>{t.settings.server}</h3>
         <dl className="kv">
-          <dt>Version</dt><dd>{h.data?.version ?? '—'}</dd>
-          <dt>Status</dt><dd>{h.data?.status ?? '—'}</dd>
+          <dt>{t.settings.version}</dt><dd>{h.data?.version ?? '—'}</dd>
+          <dt>{t.settings.status}</dt><dd>{h.data?.status ?? '—'}</dd>
         </dl>
       </div>
       <div className="card">
-        <h3>About</h3>
+        <h3>{t.settings.about}</h3>
         <p>
-          <a href="https://github.com/your-org/husk" target="_blank">GitHub</a> ·{' '}
-          <a href="/docs" target="_blank">OpenAPI</a> ·{' '}
-          <a href="/openapi.json" target="_blank">Schema</a>
+          <a href="https://github.com/your-org/husk" target="_blank">{t.settings.github}</a> ·{' '}
+          <a href="/docs" target="_blank">{t.settings.openapi}</a> ·{' '}
+          <a href="/openapi.json" target="_blank">{t.settings.schema}</a>
         </p>
         <p className="muted" style={{ fontSize: 12 }}>
-          Husk is MIT-licensed. Phase 1 runtime embeds the upstream Daytona daemon (AGPL).
+          {t.settings.license}
         </p>
       </div>
     </>
   )
 }
 
-// Suppress unused-import warning if we add useEffect-based polling later
 void useEffect

@@ -9,7 +9,8 @@ from rich.console import Console
 from rich.table import Table
 
 from husk.auth.service import ApiKeyService
-from husk.core.database import init_db, session_factory
+from husk.core import database as db_database
+from husk.core.database import init_db
 
 app = typer.Typer(help="Manage API keys (offline; reads/writes the SQLite DB directly)")
 console = Console()
@@ -23,7 +24,7 @@ def list_keys() -> None:
 
 async def _list() -> None:
     await init_db()
-    async with session_factory() as db:
+    async with db_database.session_factory() as db:
         keys = await ApiKeyService(db).list()
     if not keys:
         console.print("[dim]no api keys[/dim]")
@@ -50,7 +51,7 @@ def create(name: str = typer.Argument(..., help="Friendly name for the key")) ->
 
 async def _create(name: str) -> str:
     await init_db()
-    async with session_factory() as db:
+    async with db_database.session_factory() as db:
         _, plaintext = await ApiKeyService(db).create(name)
     return plaintext
 
@@ -64,5 +65,5 @@ def revoke(name: str = typer.Argument(...)) -> None:
 
 async def _revoke(name: str) -> None:
     await init_db()
-    async with session_factory() as db:
+    async with db_database.session_factory() as db:
         await ApiKeyService(db).revoke(name)
