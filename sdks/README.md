@@ -1,14 +1,14 @@
 # Husk SDKs
 
-Three official client libraries for talking to a Husk control plane.
+Four official client libraries for talking to a Husk control plane.
 
-| Language | Package | Status |
+| 目录 | 包名 | 说明 |
 |---|---|---|
-| Python | `husk-client` (PyPI) | Phase 1.7 (auto-generated) |
-| TypeScript | `@husk/client` (npm) | Phase 1.7 (auto-generated) |
-| Go | `github.com/<org>/husk-go` | Phase 1.7 (auto-generated) |
+| `python/` | `husk-client` (PyPI) | Python 控制面 SDK，OpenAPI 自动生成 |
+| `typescript/` | `@husk/client` (npm) | TypeScript SDK |
+| `go/` | `github.com/husklabs/husk-go` | Go SDK |
+| `langchain/` | `langchain-husk` (PyPI) | LangChain Deep Agents 集成 |
 
-All three are auto-generated from the control plane's OpenAPI spec.
-Run `scripts/gen-sdk-clients.sh` to regenerate after schema changes.
+前三种语言 SDK 均从控制面的 OpenAPI 自动生成。运行 `./scripts/gen-sdk-clients.sh` 可在 schema 变更后重新生成。
 
-For other languages, use `openapi-generator` against `http://<husk>/openapi.json`.
+如需其他语言，用 `openapi-generator` 对 `http://<husk>/openapi.json` 生成即可。
