@@ -25,6 +25,11 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   })
+  if (res.status === 401) {
+    clearToken()
+    window.dispatchEvent(new CustomEvent('husk:auth-expired'))
+    throw new Error('401 Session expired — please sign in again')
+  }
   if (!res.ok) {
     let detail = ''
     try {
@@ -37,6 +42,25 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   }
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>
+}
+
+async function requestRaw(method: string, path: string): Promise<Response> {
+  const token = getToken()
+  const headers: Record<string, string> = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  const res = await fetch(path, { method, headers })
+  if (res.status === 401) {
+    clearToken()
+    window.dispatchEvent(new CustomEvent('husk:auth-expired'))
+    throw new Error('401 Session expired')
+  }
+  if (!res.ok) {
+    let detail = ''
+    try { const j = await res.json(); detail = j.message ?? j.detail ?? JSON.stringify(j) }
+    catch { detail = await res.text() }
+    throw new Error(`${res.status} ${detail}`)
+  }
+  return res
 }
 
 // ── Sandbox ──
@@ -143,4 +167,28 @@ export interface Health {
 
 export const health = {
   get: () => request<Health>('GET', '/api/health'),
+}
+
+// ── Toolbox / File Browser ──
+
+export interface FileEntry {
+  name: string
+  path: string
+  is_dir: boolean
+  size: number
+  mode: number
+  mod_time: string
+}
+
+export interface FileListResponse {
+  entries: FileEntry[]
+}
+
+export const toolbox = {
+  listDir: (sandboxId: string, path: string) =>
+    request<FileListResponse>('GET', `/api/toolbox/${sandboxId}/files?path=${encodeURIComponent(path)}`),
+  info: (sandboxId: string, path: string) =>
+    request<FileEntry>('GET', `/api/toolbox/${sandboxId}/files/info?path=${encodeURIComponent(path)}`),
+  download: (sandboxId: string, path: string) =>
+    requestRaw('GET', `/api/toolbox/${sandboxId}/files/download?path=${encodeURIComponent(path)}`),
 }

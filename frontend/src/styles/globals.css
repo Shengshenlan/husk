@@ -137,3 +137,23 @@ dialog {
   min-width: 360px;
 }
 dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+
+/* File browser */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 13px;
+  font-family: ui-monospace, monospace;
+}
+.breadcrumb a { color: var(--accent); cursor: pointer; }
+.breadcrumb a:hover { text-decoration: underline; }
+.breadcrumb .sep { color: var(--muted); margin: 0 2px; }
+.file-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.file-icon { font-size: 16px; width: 20px; text-align: center; }

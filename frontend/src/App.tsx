@@ -2,9 +2,16 @@ import { useEffect, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useI18n } from './lib/i18n'
 import * as api from './api/client'
+import FileBrowser from './components/files/FileBrowser'
 
 export function App() {
   const [token, setToken] = useState(api.getToken())
+
+  useEffect(() => {
+    const handler = () => setToken('')
+    window.addEventListener('husk:auth-expired', handler)
+    return () => window.removeEventListener('husk:auth-expired', handler)
+  }, [])
 
   if (!token) return <Login onLogin={(t) => { api.setToken(t); setToken(t) }} />
 
@@ -243,6 +250,11 @@ function SandboxDetail({ sb, onBack }: { sb: api.Sandbox; onBack: () => void }) 
         <p className="muted">
           {t.sandboxes.toolboxHint} <code>/api/toolbox/{sb.id}/*</code>.
         </p>
+      </div>
+
+      <div className="card">
+        <h3>{t.sandboxes.files.title}</h3>
+        <FileBrowser sandboxId={sb.id} sandboxState={sb.state} />
       </div>
     </>
   )
