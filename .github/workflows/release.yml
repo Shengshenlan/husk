@@ -19,6 +19,11 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -28,6 +33,8 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository_owner }}/husk:${{ github.ref_name }}
             ghcr.io/${{ github.repository_owner }}/husk:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/husk:${{ github.ref_name }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/husk:latest
 
   python-sdk:
     runs-on: ubuntu-latest

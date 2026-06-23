@@ -1,0 +1,57 @@
+# ── Version control ──
+.git/
+.gitignore
+.gitattributes
+
+# ── Python ──
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.uv-cache/
+build/
+dist/
+*.egg
+
+# ── Node / frontend ──
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.pnpm-store/
+.eslintcache
+
+# ── Husk runtime (local data / databases) ──
+data/
+*.db
+*.db-wal
+*.db-shm
+tests-husk.db
+
+# ── Secrets ──
+.env
+.env.*
+!.env.example
+
+# ── Local dev / config ──
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+*.log
+*.tmp
+
+# ── Build scripts (not needed inside image) ──
+scripts/
+docs/
+
+# ── SDKs (published separately, not part of image) ──
+sdks/
+
+# ── Editor configs ──
+.editorconfig
